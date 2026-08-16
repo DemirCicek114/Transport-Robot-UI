@@ -1,0 +1,153 @@
+Option A (Mission Control outside ROS2) — Step-by-step, plain language
+===============================================================
+
+Simple idea
+-----------
+You’re building a “dispatch system”:
+
+1) Mission Control (server) = the dispatch office
+   - takes requests from users
+   - puts them in a queue
+   - assigns them to robots
+   - shows live status + logs
+
+2) ROS2 robot stack (the tutorial) = the autopilot + sensors + motors
+   - Nav2 drives the robot to a goal pose
+   - ros2_control sends wheel commands
+   - twist_mux chooses between nav vs joystick (manual override)
+
+3) ROS Bridge (small ROS2 node you write) = the translator
+   - turns “mission assignment” into a Nav2 goal
+   - turns “Nav2 feedback/result + robot facts” into simple status updates for Mission Control
+
+Option A = keep Mission Control outside ROS2, and later connect using the bridge.
+
+
+Step-by-step workflow (do this in order)
+----------------------------------------
+
+Step 1 — Get Mission Control working WITHOUT ROS2
+Goal: You can create a mission and see it in a queue + status updates.
+
+- Run the Mission Control server
+- Use its API (or /docs page) to POST /missions
+- Confirm missions appear and status updates stream
+
+Checkpoint: “I can create a mission and see it tracked by the server.”
+
+
+Step 2 — Get the tutorial robot stack working BY ITSELF
+Goal: In RViz, you can click a goal and the robot navigates there (start in simulation).
+
+- Follow the tutorial to run Gazebo + Nav2
+- In RViz, set a 2D Nav Goal / Goal Pose
+
+Checkpoint: “RViz goal works and the robot reaches it.”
+
+If this fails, don’t integrate anything yet—fix Nav2 first.
+
+
+Step 3 — Make a tiny ROS Bridge that does ONLY ONE job (hardcoded goal)
+Goal: Bridge can send ONE goal to Nav2 and print the result.
+
+Bridge does:
+- Send a goal pose to Nav2 (hardcoded)
+- Wait for result (SUCCEEDED/ABORTED/CANCELED)
+- Print it
+
+Checkpoint: “Run bridge → robot moves → bridge prints SUCCEEDED.”
+
+
+Step 4 — Connect Mission Control ↔ ROS Bridge (polling version = easiest)
+Goal: A mission created in Mission Control makes the bridge send a Nav2 goal.
+
+Bridge logic (simple):
+1) Every 0.5 seconds: ask Mission Control:
+   “Do you have an assignment for robot-1?”
+2) If yes:
+   - read mission_id + goal_pose
+   - send goal to Nav2
+   - tell Mission Control: “started”
+3) While moving:
+   - send status updates back to Mission Control at 1–5 Hz
+4) When done:
+   - tell Mission Control: “completed” (or failed)
+
+Checkpoint: “Create mission → robot moves → server shows En-route → Completed.”
+
+
+Step 5 — Add pause / resume / cancel (still simple)
+Goal: User can control the mission safely.
+
+- Pause:
+  - bridge cancels Nav2 goal
+  - robot stops
+- Resume:
+  - bridge resends the goal pose
+- Cancel:
+  - bridge cancels and server marks mission canceled
+
+Checkpoint: “Pause mid-way and resume successfully.”
+
+
+Step 6 — Add blocked detection + help escalation (don’t overcomplicate)
+Goal: Detect when robot is stuck and request help after retries.
+
+Mission Control policy (server-side):
+- If Nav2 says it’s ACTIVE AND robot speed is ~0 for >5 seconds,
+  then treat it as “blocked”
+- Retry up to 3 times:
+  - cancel goal → resend goal
+- If still blocked after 3 tries:
+  - mark mission “needs help” (pause and wait for operator)
+
+Important (manual override):
+- Joystick/manual driving can look like “blocked”
+- So the bridge should report:
+  manual_override_active = true/false
+- Mission Control should NOT call it blocked if manual_override_active is true
+
+Checkpoint: “Blocked triggers retries; joystick use does NOT trigger false blocked.”
+
+
+Where things run (beginner-friendly)
+------------------------------------
+
+On the robot (Raspberry Pi):
+- robot bringup (drivers + ros2_control + sensor nodes)
+
+On your laptop (dev machine):
+- Nav2 + RViz + SLAM/AMCL (tutorial style)
+- ROS Bridge node
+- Mission Control server
+
+This setup is easiest because heavy compute + debugging stays on your laptop.
+
+
+Suggested folder layout
+-----------------------
+
+project_root/
+  mission_control/          # FastAPI server (scheduler + API + logs)
+  robot_ws/                 # ROS2 workspace (tutorial)
+    src/
+      my_bot/               # from articulatedrobotics tutorial
+      mission_ros_bridge/   # your new ROS2 bridge package
+  shared_config/
+    destinations.yaml       # destination names -> (x, y, yaw) in map frame
+
+
+If you only do 3 things today (minimum plan)
+--------------------------------------------
+
+1) Run Mission Control and create missions (no ROS2 yet)
+2) Run tutorial simulation and confirm RViz goal works
+3) Run bridge with a hardcoded goal and confirm SUCCEEDED
+
+Once those work, connecting them (Step 4) is straightforward.
+
+
+Next decision (so the checklist matches your reality)
+----------------------------------------------------
+
+Are you starting in simulation first, or on the real robot first?

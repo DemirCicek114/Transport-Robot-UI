@@ -1,0 +1,22 @@
+cd /home/ubuntu/docs/sfu/ensc405/project/robot_server/robot_server/mission_control_poc
+sudo apt install python3.12-venv
+./setup_env_linux.sh
+./run_server.sh
+
+USE CASE: 
+  - name: "Point1"
+    pose: {x: 2.0, y: 1.0, yaw: 0.0}
+in
+destinations:
+  - name: "Storage"
+    pose: {x: 0.0, y: 0.0, yaw: 0.0}
+    notes: "Default pickup area"
+  - name: "Hall_A"
+    pose: {x: 5.2, y: 1.1, yaw: 1.57}
+  - name: "Ballroom"
+    pose: {x: 12.4, y: -3.0, yaw: 3.14}
+  - name: "Point1"
+    pose: {x: 2.0, y: 1.0, yaw: 0.0}
+home_destination: "Storage"
+then
+./run_server.sh

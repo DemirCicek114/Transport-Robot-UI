@@ -1,0 +1,55 @@
+destinations:
+- name: Lab 1
+  pose:
+    x: 2.55
+    y: 30.6
+    yaw: 3.14
+  notes: Lab 1 is the main Engineering Lab.
+- name: ASB 9896 S
+  pose:
+    x: 8.35
+    y: 29.9
+    yaw: 0.0
+  notes: ASB 9896 S is the south entrance to ASB 9896.
+- name: ASB 9896 N
+  pose:
+    x: 18.85
+    y: 29.9
+    yaw: 0.0
+  notes: ASB 9896 N is the north entrance to ASB 9896.
+- name: ASB 9898
+  pose:
+    x: 24.5
+    y: 30.05
+    yaw: 0.0
+  notes: ASB 9898 is the main entrance to ASB 9898.
+- name: ASB 9840
+  pose:
+    x: 35.75
+    y: 38.95
+    yaw: 1.57
+  notes: ASB 9840 is the main entrance to ASB 9840.
+- name: ASB 9971
+  pose:
+    x: 13.05
+    y: 22.65
+    yaw: 0.0
+  notes: ASB 9971 is the main entrance to ASB 9971.
+- name: ASB 9705
+  pose:
+    x: 61.75
+    y: 22.95
+    yaw: 0.0
+  notes: ASB 9705 is the main entrance to ASB 9705.
+- name: ASB 9703
+  pose:
+    x: 64.15
+    y: 22.7
+    yaw: 0.0
+  notes: ASB 9703 is the main entrance to ASB 9703.
+- name: ASB 9700
+  pose:
+    x: 63.4
+    y: 29.45
+    yaw: 0.0
+  notes: ASB 9700 is the main entrance to ASB 9700.

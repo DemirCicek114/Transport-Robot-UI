@@ -1,0 +1,6 @@
+Step 1 (Mission Control without ROS2): Done with mission_control_poc.
+Step 2 (Nav2 stack standalone): Not in this repo yet.
+Step 3 (bridge hardcoded Nav2 goal): Not implemented yet.
+Step 4 (Mission Control ↔ bridge): Prepared via RobotAdapter, but bridge adapter not written.
+Step 5 (pause/resume/cancel): Mostly done server-side.
+Step 6 (blocked + escalation): Partially done; retries/escalation exist, but manual-override-aware blocked suppression from your plan still needs explicit handling in scheduler logic.

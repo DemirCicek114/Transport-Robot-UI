@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${HOME}/.local/opt/intellitrolley"
+CURRENT_RELEASE="${APP_ROOT}/current"
+WORKSPACE="${CURRENT_RELEASE}/dev_ws"
+CENTRAL_DIR="${WORKSPACE}/robot_server/central"
+DATA_DIR="${HOME}/.local/share/intellitrolley"
+CONFIG_DIR="${HOME}/.config/intellitrolley"
+
+require_installation() {
+  [[ -x "${CENTRAL_DIR}/start_central_stack.sh" ]] \
+    || {
+      echo "IntelliTrolley Central is not installed for ${USER}." >&2
+      exit 1
+    }
+}
+
+ACTION="${1:-}"
+case "${ACTION}" in
+  start)
+    MODE="${2:-navigation}"
+    case "${MODE}" in
+      navigation|mapping|ui-only) ;;
+      *)
+        echo "Mode must be navigation, mapping, or ui-only." >&2
+        exit 2
+        ;;
+    esac
+    require_installation
+    export INTELLITROLLEY_PACKAGED_WORKSPACE="${WORKSPACE}"
+    exec "${CENTRAL_DIR}/start_central_stack.sh" "${MODE}"
+    ;;
+  stop)
+    require_installation
+    exec "${CENTRAL_DIR}/stop_central_stack.sh"
+    ;;
+  doctor)
+    require_installation
+    export INTELLITROLLEY_PACKAGED_WORKSPACE="${WORKSPACE}"
+    exec "${CENTRAL_DIR}/central_doctor.sh"
+    ;;
+  configure-network)
+    require_installation
+    [[ $# -eq 3 ]] || {
+      echo "Usage: intellitrolley-central configure-network <robot-ipv4-address> <ros-domain-id>" >&2
+      exit 2
+    }
+    export INTELLITROLLEY_PACKAGED_WORKSPACE="${WORKSPACE}"
+    exec "${CENTRAL_DIR}/configure_central_network.sh" "$2" "$3"
+    ;;
+  version)
+    require_installation
+    cat "${CURRENT_RELEASE}/PACKAGE-VERSION"
+    ;;
+  uninstall)
+    REMOVE_DATA="${2:-keep-data}"
+    case "${REMOVE_DATA}" in
+      keep-data|remove-data) ;;
+      *)
+        echo "Uninstall option must be keep-data or remove-data." >&2
+        exit 2
+        ;;
+    esac
+    if [[ "${APP_ROOT}" != "${HOME}/.local/opt/intellitrolley" ]]; then
+      echo "Refusing to uninstall an unexpected application path." >&2
+      exit 1
+    fi
+    if [[ -x "${CENTRAL_DIR}/stop_central_stack.sh" ]]; then
+      "${CENTRAL_DIR}/stop_central_stack.sh" || true
+    fi
+    rm -rf "${APP_ROOT}"
+    rm -rf "${CONFIG_DIR}"
+    if [[ "${REMOVE_DATA}" == "remove-data" ]]; then
+      rm -rf "${DATA_DIR}"
+      echo "Removed the application and mutable IntelliTrolley data."
+    else
+      echo "Removed the application. Mutable data was preserved at ${DATA_DIR}."
+    fi
+    sudo rm -f /usr/local/bin/intellitrolley-central
+    ;;
+  *)
+    cat >&2 <<'EOF'
+Usage:
+  intellitrolley-central start navigation|mapping|ui-only
+  intellitrolley-central stop
+  intellitrolley-central doctor
+  intellitrolley-central configure-network <robot-ipv4-address> <ros-domain-id>
+  intellitrolley-central version
+  intellitrolley-central uninstall keep-data|remove-data
+EOF
+    exit 2
+    ;;
+esac

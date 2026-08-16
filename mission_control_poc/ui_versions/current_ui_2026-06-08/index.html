@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IntelliTrolly Mission Control</title>
+    <link rel="stylesheet" href="/ui-assets/styles.css?v=20260526-return-wait" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <p class="eyebrow">IntelliTrolly</p>
+          <h1>Mission Control</h1>
+        </div>
+
+        <label class="robot-picker">
+          <span>Current robot</span>
+          <select id="selected-robot">
+            <option value="">Waiting for robots</option>
+          </select>
+        </label>
+
+        <div class="status-strip" aria-label="Current robot status">
+          <div><span>Mode</span><strong id="header-mode">--</strong></div>
+          <div><span>Battery</span><strong id="header-battery">--</strong></div>
+          <div><span>Connection</span><strong id="header-connection">--</strong></div>
+          <div><span>Latency</span><strong id="header-latency">--</strong></div>
+          <div><span>Current map</span><strong id="header-map">No map</strong></div>
+        </div>
+
+        <nav class="top-nav" aria-label="Main workflow">
+          <button type="button" data-nav-screen="start">START</button>
+          <button type="button" data-nav-screen="assign">ASSIGN</button>
+          <button type="button" data-nav-screen="state">STATE</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="screen" id="screen-start">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">START</p>
+              <h2>Check robot state</h2>
+            </div>
+          </div>
+
+          <div class="grid start-grid">
+            <article class="card">
+              <div class="card-head">
+                <h3>Robot State</h3>
+              </div>
+              <div class="detail-grid">
+                <div><span>Robot</span><strong id="start-robot-id">--</strong></div>
+                <div><span>Mode</span><strong id="start-mode">--</strong></div>
+                <div><span>Battery</span><strong id="start-battery">--</strong></div>
+                <div><span>Connection</span><strong id="start-connection">--</strong></div>
+                <div><span>Latency</span><strong id="start-latency">--</strong></div>
+                <div><span>Current map</span><strong id="start-map">No map</strong></div>
+                <div><span>Safety lock</span><strong id="start-lock">--</strong></div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Current Destination List</h3>
+              </div>
+              <div class="destination-list" id="destinations-list">
+                <p class="empty-state">Loading destinations.</p>
+              </div>
+            </article>
+
+            <article class="card setup-card">
+              <div class="card-head">
+                <h3>Setup</h3>
+              </div>
+              <button class="secondary-button" id="localize-robot-button" type="button">Localize Robot</button>
+              <button class="secondary-button" id="manage-maps-button" type="button">Manage Maps &amp; Destinations</button>
+            </article>
+          </div>
+
+          <div class="bottom-actions">
+            <p class="message" id="start-next-message" aria-live="polite"></p>
+            <button class="primary-button" id="start-next-button" type="button">NEXT</button>
+          </div>
+        </section>
+
+        <section class="screen hidden" id="screen-manage">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">Setup</p>
+              <h2>Mapping &amp; Destination</h2>
+            </div>
+            <button class="text-button" type="button" data-nav-screen="start">Back to Start</button>
+          </div>
+
+          <div class="grid two-panel">
+            <article class="card">
+              <div class="card-head">
+                <h3>Saved Maps</h3>
+                <span class="pill" id="manage-current-map">Current Map: No map selected</span>
+              </div>
+              <label>
+                <span>Select saved map</span>
+                <select id="saved-map-select">
+                  <option value="">No saved maps found</option>
+                </select>
+              </label>
+              <div class="button-row">
+                <button class="primary-button" id="select-map-button" type="button">Select Map</button>
+              </div>
+              <p class="message" id="manage-message" aria-live="polite"></p>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Destination Setup</h3>
+              </div>
+              <div class="button-row">
+                <button class="secondary-button" id="mapping-mode-button" type="button">Mapping Mode</button>
+                <button class="primary-button" id="add-destination-button" type="button">Add Destination</button>
+                <button class="text-button" type="button" data-nav-screen="start">Back to Start</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen hidden" id="screen-mapping">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">Setup</p>
+              <h2>Mapping Mode</h2>
+            </div>
+            <button class="text-button" type="button" data-nav-screen="manage">Cancel</button>
+          </div>
+
+          <div class="grid map-layout">
+            <article class="card">
+              <div class="card-head">
+                <h3>Create or update a map</h3>
+                <span class="pill" id="mapping-status">Mapping idle</span>
+              </div>
+              <label>
+                <span>Map name</span>
+                <input id="mapping-map-name" type="text" placeholder="Office" />
+              </label>
+              <div class="button-row">
+                <button class="secondary-button" id="start-mapping-button" type="button">Start Mapping</button>
+                <button class="primary-button" id="save-mapping-button" type="button">Done &amp; Save Map</button>
+                <button class="text-button" type="button" data-nav-screen="manage">Cancel</button>
+              </div>
+              <p class="message" id="mapping-message" aria-live="polite"></p>
+            </article>
+
+            <article class="card map-card">
+              <div class="card-head">
+                <h3>Live Map</h3>
+                <span class="muted" id="mapping-map-meta">No live map yet</span>
+              </div>
+              <div class="map-shell">
+                <canvas id="mapping-map-canvas" width="780" height="480"></canvas>
+                <div class="map-placeholder" id="mapping-map-placeholder">Live map appears here when available.</div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen hidden" id="screen-add-destination">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">Setup</p>
+              <h2>Add Destination</h2>
+            </div>
+            <button class="text-button" type="button" data-nav-screen="manage">Cancel</button>
+          </div>
+
+          <div class="grid map-layout">
+            <article class="card map-card">
+              <div class="card-head">
+                <h3>Selected Map</h3>
+                <span class="pill" id="add-selected-map">No map selected</span>
+              </div>
+              <div class="mode-row" id="add-map-modes">
+                <button class="secondary-button active" type="button" data-map-mode="move">Move Map</button>
+                <button class="secondary-button" type="button" data-map-mode="destination">Set Destination Point</button>
+                <button class="secondary-button" type="button" data-map-mode="initial">Set Initial Pose Point</button>
+              </div>
+              <div class="map-shell">
+                <canvas id="add-map-canvas" width="780" height="480"></canvas>
+                <div class="map-placeholder" id="add-map-placeholder">Select a map to add destination points.</div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Destination</h3>
+              </div>
+              <label>
+                <span>Destination Name</span>
+                <input id="destination-name" type="text" placeholder="Hall_A" />
+              </label>
+              <div class="form-grid">
+                <label><span>X</span><input id="destination-x" type="number" step="0.01" /></label>
+                <label><span>Y</span><input id="destination-y" type="number" step="0.01" /></label>
+                <label><span>Yaw</span><input id="destination-yaw" type="number" step="0.01" value="0" /></label>
+              </div>
+
+              <details class="advanced-section">
+                <summary>Robot Initial Position / AMCL Start</summary>
+                <p class="helper">Optional. This tells localization where the robot starts; it is separate from the destination.</p>
+                <button class="secondary-button" id="use-current-pose-button" type="button">Use Current Robot Pose</button>
+                <div class="form-grid">
+                  <label><span>X</span><input id="initial-pose-x" type="number" step="0.01" /></label>
+                  <label><span>Y</span><input id="initial-pose-y" type="number" step="0.01" /></label>
+                  <label><span>Yaw</span><input id="initial-pose-yaw" type="number" step="0.01" value="0" /></label>
+                </div>
+                <button class="secondary-button" id="send-initial-pose-button" type="button">Send Initial Pose</button>
+              </details>
+
+              <div class="button-row">
+                <button class="primary-button" id="save-destination-button" type="button">Save Destination</button>
+                <button class="text-button" type="button" data-nav-screen="manage">Cancel</button>
+              </div>
+              <p class="message" id="add-destination-message" aria-live="polite"></p>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen hidden" id="screen-assign">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">ASSIGN</p>
+              <h2>Create Request</h2>
+            </div>
+          </div>
+
+          <div class="grid two-panel">
+            <article class="card action-card">
+              <h3>Auto Mode</h3>
+              <p>Create a pending request. The robot will not move until it is started from STATE.</p>
+              <button class="primary-button" id="open-new-request-button" type="button">Auto Mode: Create Request</button>
+            </article>
+
+            <article class="card action-card">
+              <h3>Manual Drive</h3>
+              <p>Go to direct movement controls. Manual commands take priority while pressed.</p>
+              <button class="secondary-button" id="manual-mode-button" type="button">Manual Drive</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen hidden" id="screen-new-request">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">ASSIGN</p>
+              <h2>New Request</h2>
+            </div>
+            <button class="text-button" type="button" data-nav-screen="assign">Back to Assign</button>
+          </div>
+
+          <form class="card request-form" id="request-form">
+            <fieldset>
+              <legend>Operator Identity</legend>
+              <div class="form-grid two">
+                <label>
+                  <span>Requester</span>
+                  <input id="requester" type="text" placeholder="test guy 1" required />
+                </label>
+                <label>
+                  <span>Operator / Device ID</span>
+                  <input id="operator-id" type="text" value="dashboard-1" required />
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Request Details</legend>
+              <div class="form-grid two">
+                <label>
+                  <span>Destination</span>
+                  <select id="request-destination" required></select>
+                </label>
+                <label>
+                  <span>Trip Type</span>
+                  <select id="trip-type">
+                    <option value="single">One-way</option>
+                    <option value="round_trip">Round trip</option>
+                  </select>
+                </label>
+              </div>
+              <label id="return-destination-field">
+                <span>Return Destination</span>
+                <select id="return-destination">
+                  <option value="">Use Home</option>
+                </select>
+              </label>
+              <div class="form-grid two">
+                <label>
+                  <span>Robot</span>
+                  <select id="request-robot">
+                    <option value="">Auto-select available robot</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Notes</span>
+                  <textarea id="request-notes" rows="3" placeholder="Optional notes"></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="button-row">
+              <button class="primary-button" id="create-request-button" type="submit">Create Request</button>
+              <button class="secondary-button hidden" id="create-another-button" type="button">Create Another Request</button>
+              <button class="secondary-button hidden" id="go-state-button" type="button">Go to State</button>
+            </div>
+            <p class="message" id="request-message" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="screen hidden" id="screen-state">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow">STATE</p>
+              <h2>Start and monitor missions</h2>
+            </div>
+            <div class="button-row">
+              <button class="text-button" type="button" data-nav-screen="start">Back to Start</button>
+              <button class="text-button" type="button" data-nav-screen="assign">Back to Assign</button>
+            </div>
+          </div>
+
+          <div class="grid state-grid">
+            <article class="card">
+              <div class="card-head">
+                <h3>Pending Requests</h3>
+                <button class="secondary-button" id="clear-pending-button" type="button">Clear Pending</button>
+              </div>
+              <div class="request-list" id="pending-requests-list">
+                <p class="empty-state">No pending requests.</p>
+              </div>
+              <p class="message" id="state-message" aria-live="polite"></p>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Active Mission</h3>
+                <button class="danger-button" id="cancel-current-mission-button" type="button">Cancel Mission</button>
+              </div>
+              <div id="active-mission-card">
+                <p class="empty-state">No active mission.</p>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Robot State</h3>
+              </div>
+              <div class="detail-grid">
+                <div><span>Robot</span><strong id="state-robot-id">--</strong></div>
+                <div><span>Battery</span><strong id="state-battery">--</strong></div>
+                <div><span>Mode</span><strong id="state-mode">--</strong></div>
+                <div><span>Connection</span><strong id="state-connection">--</strong></div>
+                <div><span>Latency</span><strong id="state-latency">--</strong></div>
+                <div><span>Safety lock</span><strong id="state-lock">--</strong></div>
+              </div>
+            </article>
+
+            <article class="card map-card">
+              <div class="card-head">
+                <h3>Map</h3>
+                <span class="muted" id="state-map-meta">No live map yet</span>
+              </div>
+              <div class="map-shell">
+                <canvas id="state-map-canvas" width="780" height="480"></canvas>
+                <div class="map-placeholder" id="state-map-placeholder">Live map appears here when available.</div>
+              </div>
+              <div class="map-legend">
+                <span><i class="legend-swatch legend-robot"></i>Robot position</span>
+                <span><i class="legend-swatch legend-initial"></i>Initial position</span>
+                <span><i class="legend-swatch legend-goal"></i>Goal position</span>
+              </div>
+              <button class="secondary-button" id="save-temp-destination-button" type="button">Save Goal as Temp Destination</button>
+              <p class="message" id="map-message" aria-live="polite"></p>
+            </article>
+
+            <article class="card danger-card">
+              <div class="card-head">
+                <h3>Robot Control</h3>
+              </div>
+              <button class="danger-button" type="button" data-power-mode="STOP">Robot Off / Stop</button>
+              <div class="divider"></div>
+              <button class="secondary-button" type="button" data-power-mode="RESET">Robot On</button>
+              <div class="manual-drive-shell is-disabled" id="manual-drive-shell">
+                <div class="manual-pad" id="manual-pad">
+                  <button class="manual-drive-button manual-forward" type="button" data-manual-linear="1" data-manual-angular="0" data-manual-label="Forward">↑</button>
+                  <button class="manual-drive-button manual-left" type="button" data-manual-linear="0" data-manual-angular="1" data-manual-label="Left">←</button>
+                  <button class="manual-drive-button manual-stop" type="button" data-manual-stop="true">Stop Movement</button>
+                  <button class="manual-drive-button manual-right" type="button" data-manual-linear="0" data-manual-angular="-1" data-manual-label="Right">→</button>
+                  <button class="manual-drive-button manual-backward" type="button" data-manual-linear="-1" data-manual-angular="0" data-manual-label="Backward">↓</button>
+                </div>
+              </div>
+              <p class="helper" id="manual-status">Manual driving is available when the robot is on. Manual commands take priority over navigation.</p>
+              <p class="message" id="manual-message" aria-live="polite"></p>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <h3>Queue &amp; History</h3>
+                <div class="button-row">
+                  <button class="secondary-button" id="clear-completed-button" type="button">Clear Completed</button>
+                  <button class="danger-button" id="clear-all-button" type="button">Clear Queue &amp; History</button>
+                </div>
+              </div>
+              <p class="message" id="queue-message" aria-live="polite"></p>
+              <div class="table-wrap">
+                <table class="mission-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Route</th>
+                      <th>Robot</th>
+                      <th>Requester</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="missions-body">
+                    <tr><td colspan="5" class="empty-state">No started missions yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <div class="modal-overlay hidden" id="return-modal" role="dialog" aria-modal="true" aria-labelledby="return-modal-title">
+        <div class="modal-card">
+          <p class="eyebrow">Round Trip</p>
+          <h2 id="return-modal-title">Robot arrived</h2>
+          <p id="return-modal-text">The robot is waiting at the destination.</p>
+          <div class="button-row">
+            <button class="primary-button" id="return-modal-button" type="button">Return</button>
+            <button class="secondary-button" id="return-modal-stay-button" type="button">Stay Here</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/ui-assets/app.js?v=20260526-return-wait" defer></script>
+  </body>
+</html>

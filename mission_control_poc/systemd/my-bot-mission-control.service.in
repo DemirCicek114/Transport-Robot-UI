@@ -1,0 +1,39 @@
+[Unit]
+Description=My Bot Mission Control API and web UI
+Documentation=file://@MISSION_CONTROL_DIR@/README.md
+Wants=network-online.target my-bot-robot.service
+After=network-online.target my-bot-robot.service
+StartLimitIntervalSec=0
+ConditionPathExists=@ROBOT_WORKSPACE@/install/setup.bash
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_USER@
+WorkingDirectory=@MISSION_CONTROL_DIR@
+Environment=HOME=@SERVICE_HOME@
+Environment=ROBOT_WORKSPACE=@ROBOT_WORKSPACE@
+Environment=MISSION_CONTROL_ROS2_MAP_DIRECTORY=@MAP_DIRECTORY@
+Environment=MISSION_CONTROL_DEFAULT_MAP=@MAP_NAME@
+Environment=MISSION_CONTROL_DB_PATH=@STATE_DIRECTORY@/mission_control.sqlite3
+Environment=MISSION_CONTROL_DESTINATIONS_PATH=@STATE_DIRECTORY@/destinations.yaml
+Environment=ROS_DOMAIN_ID=0
+Environment=ROS_LOCALHOST_ONLY=0
+Environment=RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+Environment=CYCLONEDDS_URI=file://@ROBOT_WORKSPACE@/install/my_bot/share/my_bot/config/cyclonedds.xml
+Environment=HOST=0.0.0.0
+Environment=PORT=8000
+Environment=RCUTILS_COLORIZED_OUTPUT=0
+ExecStart=/usr/bin/bash @MISSION_CONTROL_DIR@/launch_pi_mission_control.sh
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+KillMode=control-group
+TimeoutStopSec=20
+CPUWeight=50
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=my-bot-mission-control
+
+[Install]
+WantedBy=multi-user.target
